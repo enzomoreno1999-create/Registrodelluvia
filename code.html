@@ -1,0 +1,358 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registro de Lluvias - Buenos Aires</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        .location-select {
+            background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%23374151'%3E%3Cpath d='M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z'/%3E%3C/svg%3E");
+            background-repeat: no-repeat;
+            background-position: right 0.5rem center;
+            background-size: 1.5rem;
+        }
+        
+        .success-message {
+            animation: fadeInOut 3s ease-in-out forwards;
+        }
+        
+        @keyframes fadeInOut {
+            0% { opacity: 0; }
+            20% { opacity: 1; }
+            80% { opacity: 1; }
+            100% { opacity: 0; visibility: hidden; }
+        }
+    </style>
+</head>
+<body class="bg-blue-50 min-h-screen">
+    <div class="container mx-auto px-4 py-8">
+        <!-- Header -->
+        <header class="text-center mb-8">
+            <div class="flex justify-center mb-4">
+                <div class="bg-blue-100 p-3 rounded-full">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-12 w-12 text-blue-600" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                    </svg>
+                </div>
+            </div>
+            <h1 class="text-3xl font-bold text-blue-800 mb-2">Registro de Lluvias</h1>
+            <p class="text-blue-600">Provincia de Buenos Aires, Argentina</p>
+        </header>
+
+        <!-- Form -->
+        <div class="bg-white rounded-lg shadow-md p-6 max-w-md mx-auto">
+            <form id="rainForm" class="space-y-4">
+                <!-- Location Selector -->
+                <div>
+                    <label for="location" class="block text-sm font-medium text-gray-700 mb-1">Ubicación</label>
+                    <div class="relative">
+                        <select id="location" required class="location-select w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                            <option value="" disabled selected>Seleccione una localidad</option>
+                            <!-- Las opciones se llenarán con JavaScript -->
+                        </select>
+                    </div>
+                </div>
+
+                <!-- Precipitation Input -->
+                <div>
+                    <label for="precipitation" class="block text-sm font-medium text-gray-700 mb-1">Precipitación (mm)</label>
+                    <div class="mt-1 relative rounded-md shadow-sm">
+                        <input type="number" id="precipitation" step="0.1" min="0" required 
+                               class="block w-full px-4 py-2 border border-gray-300 rounded-md focus:ring-blue-500 focus:border-blue-500" 
+                               placeholder="Ej: 25.5">
+                        <div class="absolute inset-y-0 right-0 flex items-center pr-3 pointer-events-none">
+                            <span class="text-gray-500 text-sm">mm</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Date Input -->
+                <div>
+                    <label for="date" class="block text-sm font-medium text-gray-700 mb-1">Fecha del registro</label>
+                    <input type="date" id="date" class="block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                </div>
+
+                <!-- Submit Button -->
+                <div>
+                    <button type="submit" class="w-full flex justify-center py-2 px-4 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500">
+                        Registrar Lluvia
+                    </button>
+                </div>
+            </form>
+
+            <!-- Success Message -->
+            <div id="successMessage" class="success-message hidden mt-4 p-3 bg-green-100 border border-green-400 text-green-700 rounded">
+                <p>¡Registro guardado exitosamente!</p>
+            </div>
+        </div>
+
+        <!-- Recent Records Section -->
+        <div class="bg-white rounded-lg shadow-md p-6 mt-8 max-w-2xl mx-auto">
+            <h2 class="text-xl font-semibold text-gray-800 mb-4">Registros Recientes</h2>
+            <div id="recordsTable" class="overflow-x-auto">
+                <table class="min-w-full divide-y divide-gray-200">
+                    <thead class="bg-gray-50">
+                        <tr>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Ubicación</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Lluvia (mm)</th>
+                            <th class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">Fecha</th>
+                        </tr>
+                    </thead>
+                    <tbody id="recordsBody" class="bg-white divide-y divide-gray-200">
+                        <tr>
+                            <td colspan="3" class="px-6 py-4 text-center text-sm text-gray-500">No hay registros aún</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+
+        <!-- App Footer -->
+        <footer class="mt-12 text-center text-sm text-gray-600">
+            <p>© 2023 Registro de Lluvias - Buenos Aires</p>
+            <p class="mt-1">Datos para el sector agropecuario</p>
+        </footer>
+    </div>
+
+    <script>
+        // Lista completa de localidades de Buenos Aires
+        const locations = [
+            "Adolfo Alsina (Carhué, Rivera, Villa Maza)",
+            "Adolfo Gonzales Chaves (Adolfo Gonzales Chaves, De la Garma)",
+            "Alberti (Alberti, Mechita)",
+            "Almirante Brown (Adrogué, Burzaco, Claypole, Glew, Longchamps, Rafael Calzada)",
+            "Arrecifes (Arrecifes, Todd, Viña)",
+            "Avellaneda (Avellaneda, Dock Sud, Sarandí, Villa Domínico, Wilde)",
+            "Ayacucho (Ayacucho, Udaquiola)",
+            "Azul (Azul, Chillar, Cacharí)",
+            "Bahía Blanca (Bahía Blanca, Ingeniero White, General Daniel Cerri)",
+            "Balcarce (Balcarce, San Agustín, Los Pinos)",
+            "Baradero (Baradero, Ireneo Portela)",
+            "Benito Juárez (Benito Juárez, Villa Cacique, Barker)",
+            "Berazategui (Berazategui, Hudson, Ranelagh)",
+            "Berisso (Berisso, Villa Zula)",
+            "Bolívar (San Carlos de Bolívar, Urdampilleta)",
+            "Bragado (Bragado, O'Brien, Mechita)",
+            "Brandsen (Brandsen, Jeppener)",
+            "Campana (Campana)",
+            "Cañuelas (Cañuelas, Máximo Paz)",
+            "Capitán Sarmiento (Capitán Sarmiento)",
+            "Carlos Casares (Carlos Casares, Smith)",
+            "Carlos Tejedor (Carlos Tejedor, Tres Algarrobos)",
+            "Carmen de Areco (Carmen de Areco, Tres Sargentos)",
+            "Castelli (Castelli)",
+            "Chacabuco (Chacabuco, O'Higgins, Rawson)",
+            "Chascomús (Chascomús)",
+            "Chivilcoy (Chivilcoy, Moquehuá, Rawson)",
+            "Colón (Colón)",
+            "Coronel de Marina Leonardo Rosales (Punta Alta, Bajo Hondo)",
+            "Coronel Dorrego (Coronel Dorrego, Oriente)",
+            "Coronel Pringles (Coronel Pringles, Indio Rico)",
+            "Coronel Suárez (Coronel Suárez, Huanguelén, San José)",
+            "Daireaux (Daireaux, Salazar)",
+            "Dolores (Dolores)",
+            "Ensenada (Ensenada, Punta Lara)",
+            "Escobar (Belén de Escobar, Garín, Ingeniero Maschwitz)",
+            "Esteban Echeverría (Monte Grande, Luis Guillón, El Jagüel)",
+            "Exaltación de la Cruz (Capilla del Señor, Los Cardales)",
+            "Ezeiza (Ezeiza, Tristán Suárez, La Unión)",
+            "Florencio Varela (Florencio Varela, San Juan Bautista)",
+            "Florentino Ameghino (Florentino Ameghino, Blaquier)",
+            "General Alvarado (Miramar, Mar del Sur)",
+            "General Alvear (General Alvear)",
+            "General Arenales (General Arenales, Arribeños)",
+            "General Belgrano (General Belgrano, Gorchs)",
+            "General Guido (General Guido, Labardén)",
+            "General La Madrid (General La Madrid, La Colina)",
+            "General Las Heras (General Las Heras, Villars)",
+            "General Lavalle (General Lavalle, San Clemente del Tuyú)",
+            "General Madariaga (General Madariaga)",
+            "General Paz (Ranchos, Villanueva)",
+            "General Pinto (General Pinto, Germania)",
+            "General Pueyrredón (Mar del Plata, Batán, Sierra de los Padres)",
+            "General Rodríguez (General Rodríguez)",
+            "General San Martín (General San Martín, Villa Ballester, San Andrés)",
+            "General Viamonte (Los Toldos, Baigorrita)",
+            "General Villegas (General Villegas, Piedritas)",
+            "Guaminí (Guaminí, Casbas)",
+            "Hipólito Yrigoyen (Henderson)",
+            "Hurlingham (Hurlingham, Villa Tesei, William C. Morris)",
+            "Ituzaingó (Ituzaingó)",
+            "José C. Paz (José C. Paz)",
+            "Junín (Junín, Morse, Agustín Roca)",
+            "La Costa (Mar del Tuyú, Santa Teresita, San Clemente del Tuyú)",
+            "La Matanza (San Justo, Ramos Mejía, Laferrere, González Catán)",
+            "La Plata (La Plata, City Bell, Gonnet, Villa Elisa)",
+            "Lanús (Lanús Este, Lanús Oeste, Remedios de Escalada)",
+            "Laprida (Laprida, San Jorge)",
+            "Las Flores (Las Flores, Pardo)",
+            "Leandro N. Alem (Vedia, Leandro N. Alem)",
+            "Lincoln (Lincoln, Roberts, Pasteur)",
+            "Lobería (Lobería, San Manuel)",
+            "Lobos (Lobos, Empalme Lobos)",
+            "Lomas de Zamora (Lomas de Zamora, Banfield, Temperley)",
+            "Luján (Luján, Open Door, Jáuregui)",
+            "Magdalena (Magdalena, Atalaya)",
+            "Maipú (Maipú, Las Armas)",
+            "Malvinas Argentinas (Los Polvorines, Grand Bourg, Villa de Mayo)",
+            "Mar Chiquita (Coronel Vidal, Santa Clara del Mar)",
+            "Marcos Paz (Marcos Paz)",
+            "Mercedes (Mercedes)",
+            "Merlo (Merlo, San Antonio de Padua, Libertad)",
+            "Monte (San Miguel del Monte)",
+            "Monte Hermoso (Monte Hermoso)",
+            "Moreno (Moreno, Paso del Rey, La Reja)",
+            "Morón (Morón, Castelar, Haedo, El Palomar)",
+            "Navarro (Navarro)",
+            "Necochea (Necochea, Quequén)",
+            "Nueve de Julio (Nueve de Julio, Dudignac)",
+            "Olavarría (Olavarría, Sierras Bayas, Hinojo)",
+            "Patagones (Carmen de Patagones, Villalonga)",
+            "Pehuajó (Pehuajó, Juan José Paso)",
+            "Pellegrini (Pellegrini)",
+            "Pergamino (Pergamino, Acevedo)",
+            "Pila (Pila)",
+            "Pilar (Pilar, Del Viso, Presidente Derqui)",
+            "Pinamar (Pinamar, Ostende, Valeria del Mar)",
+            "Presidente Perón (Guernica)",
+            "Puán (Puán, Darregueira)",
+            "Quilmes (Quilmes, Bernal, Don Bosco, Solano)",
+            "Ramallo (Ramallo, Villa Ramallo)",
+            "Rauch (Rauch)",
+            "Rivadavia (América, González Moreno)",
+            "Rojas (Rojas)",
+            "Roque Pérez (Roque Pérez)",
+            "Saavedra (Pigüé, Saavedra)",
+            "Saladillo (Saladillo, Del Carril)",
+            "Salliqueló (Salliqueló, Quenumá)",
+            "Salto (Salto)",
+            "San Andrés de Giles (San Andrés de Giles, Azcuénaga)",
+            "San Antonio de Areco (San Antonio de Areco, Duggan)",
+            "San Cayetano (San Cayetano, Ochandío)",
+            "San Fernando (San Fernando, Victoria, Virreyes)",
+            "San Isidro (San Isidro, Martínez, Acassuso)",
+            "San Miguel (San Miguel, Bella Vista, Muñiz)",
+            "San Nicolás (San Nicolás de los Arroyos)",
+            "San Pedro (San Pedro, Santa Lucía)",
+            "San Vicente (San Vicente, Alejandro Korn)",
+            "Suipacha (Suipacha)",
+            "Tandil (Tandil, María Ignacia Vela)",
+            "Tapalqué (Tapalqué)",
+            "Tigre (Tigre, Don Torcuato, El Talar)",
+            "Tordillo (General Conesa)",
+            "Tornquist (Tornquist, Sierra de la Ventana)",
+            "Trenque Lauquen (Trenque Lauquen, Treinta de Agosto)",
+            "Tres Arroyos (Tres Arroyos, Claromecó, Orense)",
+            "Tres de Febrero (Caseros, Ciudadela, Santos Lugares)",
+            "Tres Lomas (Tres Lomas, Ingeniero Thompson)",
+            "Veinticinco de Mayo (Veinticinco de Mayo, Norberto de la Riestra)",
+            "Vicente López (Olivos, Florida, Vicente López)",
+            "Villa Gesell (Villa Gesell, Mar de las Pampas)",
+            "Villarino (Médanos, Pedro Luro)",
+            "Zárate (Zárate, Lima)"
+        ];
+
+        // Variables para almacenamiento local
+        let records = JSON.parse(localStorage.getItem('rainRecords')) || [];
+
+        // Inicializar la aplicación
+        document.addEventListener('DOMContentLoaded', function() {
+            // Llenar el selector de ubicaciones
+            const locationSelect = document.getElementById('location');
+            locations.forEach(location => {
+                const option = document.createElement('option');
+                option.value = location;
+                option.textContent = location;
+                locationSelect.appendChild(option);
+            });
+
+            // Establecer la fecha actual por defecto
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('date').value = today;
+
+            // Mostrar registros existentes
+            displayRecords();
+
+            // Manejar envío del formulario
+            document.getElementById('rainForm').addEventListener('submit', function(e) {
+                e.preventDefault();
+                
+                const location = document.getElementById('location').value;
+                const precipitation = parseFloat(document.getElementById('precipitation').value);
+                const date = document.getElementById('date').value || today;
+                
+                // Validar entrada
+                if (!location || isNaN(precipitation) || precipitation < 0) {
+                    alert('Por favor complete todos los campos correctamente');
+                    return;
+                }
+                
+                // Crear nuevo registro
+                const newRecord = {
+                    location,
+                    precipitation,
+                    date
+                };
+                
+                // Agregar al almacenamiento local
+                records.unshift(newRecord); // Agregar al inicio
+                if (records.length > 10) records = records.slice(0, 10); // Mantener sólo los últimos 10
+                localStorage.setItem('rainRecords', JSON.stringify(records));
+                
+                // Mostrar mensaje de éxito
+                const successMessage = document.getElementById('successMessage');
+                successMessage.classList.remove('hidden');
+                setTimeout(() => {
+                    successMessage.classList.add('hidden');
+                }, 3000);
+                
+                // Actualizar tabla de registros
+                displayRecords();
+                
+                // Resetear el formulario (excepto la ubicación)
+                document.getElementById('precipitation').value = '';
+                document.getElementById('date').value = today;
+            });
+        });
+
+        // Función para mostrar los registros
+        function displayRecords() {
+            const recordsBody = document.getElementById('recordsBody');
+            
+            if (records.length === 0) {
+                recordsBody.innerHTML = `
+                    <tr>
+                        <td colspan="3" class="px-6 py-4 text-center text-sm text-gray-500">No hay registros aún</td>
+                    </tr>
+                `;
+                return;
+            }
+            
+            recordsBody.innerHTML = '';
+            
+            records.forEach(record => {
+                const row = document.createElement('tr');
+                
+                const locationCell = document.createElement('td');
+                locationCell.className = 'px-6 py-4 whitespace-nowrap text-sm text-gray-900';
+                locationCell.textContent = record.location.split(' (')[0]; // Mostrar sólo el nombre principal
+                
+                const precipitationCell = document.createElement('td');
+                precipitationCell.className = 'px-6 py-4 whitespace-nowrap text-sm text-gray-900 font-medium';
+                precipitationCell.textContent = record.precipitation;
+                
+                const dateCell = document.createElement('td');
+                dateCell.className = 'px-6 py-4 whitespace-nowrap text-sm text-gray-500';
+                dateCell.textContent = new Date(record.date).toLocaleDateString('es-AR');
+                
+                row.appendChild(locationCell);
+                row.appendChild(precipitationCell);
+                row.appendChild(dateCell);
+                
+                recordsBody.appendChild(row);
+            });
+        }
+    </script>
+</body>
+</html>
